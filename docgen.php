@@ -1,5 +1,24 @@
 <?php
+class CodeUtility {
+  static $scripts = array();
+  function register( $slug, $callback ) {
+    self::$scripts[$slug] = $callback;
+  }
 
+  function apply_at_rule( $slug, $line ) {
+    if ( array_key_exists( $slug, self::$scripts ) ) {
+      if ( is_array( self::$scripts[$slug] ) ) {
+        return self::$scripts[$slug][0][0]->{self::$scripts[$slug][0]}($line);
+      }
+      else {
+        return self::$scripts[$slug]($line);
+      }
+    }
+    else {
+      return $line;
+    }
+  }
+}
 // A class for code documentation
 class CodeDoc {
   var $valid = FALSE;
@@ -8,6 +27,7 @@ class CodeDoc {
   var $title;
   var $definition;
   var $parameters;
+  var $data;
   public function __construct( $content, $definition, $file_name='', $pos='' ) {
     $lines = explode( "\n", $content );
     array_shift( $lines );
@@ -31,11 +51,23 @@ class CodeDoc {
     $description = array();
     foreach ($lines as $line) {
       if ( strlen($line) && '@' === $line[0] ) {
-        break;
+        $this->process_special( $line );
       }
-      $description[] = $line;
+      else {
+        $description[] = $line;
+      }
     }
     $this->description = implode( "\n", $description );
+  }
+
+  public function process_special( $line ) {
+    $matches = array();
+    if ( preg_match( '/^@(\S+)(.*)$/', $line, $matches ) ){
+      if ( !isset( $this->data[$matches[1]] ) ) {
+        $this->data[$matches[1]] = array();
+      }
+      $this->data[$matches[1]][] = CodeUtility::apply_at_rule( $matches[1], $matches[2] );
+    }
   }
 
   public function to_array() {
@@ -46,6 +78,7 @@ class CodeDoc {
       'parameters' => $this->parameters,
       'file' => $this->file_name,
       'line' => $this->line,
+      'data' => $this->data,
     );
   }
 

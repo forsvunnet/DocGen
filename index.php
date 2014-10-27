@@ -121,7 +121,7 @@ var process_doc = function( doc ) {
   if ( doc.description ) {
     object.elem.description = $('<p>');
     object.elem.description
-      .html( doc.description.replace("\n", '<br>') )
+      .html( doc.description.replace(/\n/g, '<br>') )
       .appendTo( box );
   }
   object.elem.box = box;
