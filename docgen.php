@@ -1,17 +1,5 @@
 <?php
 
-// JSON Doc
-header('Content-Type: application/json');
-
-$path = '../VoidJS';
-$ext = 'js';
-$save_to = 'void-js';
-
-// Files to ignore (regex):
-$ignore = array(
-  'node_modules',
-  '^\.'
-);
 // A class for code documentation
 class CodeDoc {
   var $valid = FALSE;
@@ -182,9 +170,3 @@ class CodeDir {
   }
 
 }
-
-
-$code_dir = new CodeDir( $ext, $ignore );
-$docs = $code_dir->traverse_dir( $path )->export();
-
-echo json_encode( $docs );

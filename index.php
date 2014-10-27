@@ -139,7 +139,7 @@ var fill_data = function( json ) {
 
 $(document).ready(function() {
   content = $('#content');
-  $.getJSON( '/docgen.php', fill_data );
+  $.getJSON( '/json.php', fill_data );
 });
 </script>
 </body>
