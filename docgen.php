@@ -55,13 +55,15 @@ class CodeDir {
   var $ext = array();
   var $ignore;
   var $code_docs = array();
+  var $errors = array();
+
   public function __construct( $ext, $ignore = array() ) {
     $this->ignore = $ignore;
     if ( is_array( $ext ) ) {
       $this->ext = $ext;
     }
     elseif ( is_string( $ext ) ) {
-      $this->ext = explode(',', $ext);
+      $this->ext = explode(',', str_replace( ' ', '', $ext ) );
     }
     else {
       throw new Exception("Extension must be array or string", 1);
