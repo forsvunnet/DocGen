@@ -1,17 +1,18 @@
 <?php
 class CodeUtility {
   static $scripts = array();
-  function register( $slug, $callback ) {
+  static function register( $slug, $callback ) {
     self::$scripts[$slug] = $callback;
   }
 
-  function apply_at_rule( $slug, $line ) {
+  static function apply_at_rule( $slug, $line ) {
     if ( array_key_exists( $slug, self::$scripts ) ) {
       if ( is_array( self::$scripts[$slug] ) ) {
-        return self::$scripts[$slug][0][0]->{self::$scripts[$slug][0]}($line);
+        return self::$scripts[$slug][0]->{self::$scripts[$slug][1]}($line);
       }
       else {
-        return self::$scripts[$slug]($line);
+        $func = self::$scripts[$slug];
+        return $func($line);
       }
     }
     else {
@@ -19,6 +20,33 @@ class CodeUtility {
     }
   }
 }
+// Apply standard rules
+
+// @PARAM
+CodeUtility::register('param', 'code_doc_param');
+function code_doc_param( $line ) {
+  $matches = array();
+  if ( preg_match( '/^\s*(\S+)\s+(\S+)\s*(.*)/', $line, $matches ) ) {
+    array_shift($matches);
+    return $matches;
+  }
+  else {
+    return array( $line, '' );
+  }
+}
+// @RETURN
+CodeUtility::register('return', 'code_doc_return');
+function code_doc_return( $line ) {
+  $matches = array();
+  if ( preg_match( '/^\s*(\S+)\s*(.*)/', $line, $matches ) ) {
+    array_shift($matches);
+    return $matches;
+  }
+  else {
+    return array( $line, '' );
+  }
+}
+
 // A class for code documentation
 class CodeDoc {
   var $valid = FALSE;
@@ -38,6 +66,7 @@ class CodeDoc {
       }
       $line = preg_replace( '/\s+\*\s*/', '', $line );
     }
+    unset( $line );
     $this->valid = TRUE;
     $this->file_name = $file_name;
     $this->line = $pos;
@@ -49,7 +78,7 @@ class CodeDoc {
     $this->title = array_shift( $lines );
 
     $description = array();
-    foreach ($lines as $line) {
+    foreach ( $lines as $line ) {
       if ( strlen($line) && '@' === $line[0] ) {
         $this->process_special( $line );
       }
@@ -57,12 +86,13 @@ class CodeDoc {
         $description[] = $line;
       }
     }
+
     $this->description = implode( "\n", $description );
   }
 
   public function process_special( $line ) {
     $matches = array();
-    if ( preg_match( '/^@(\S+)(.*)$/', $line, $matches ) ){
+    if ( preg_match( '/^@(\S+)\s+(.*)$/', $line, $matches ) ){
       if ( !isset( $this->data[$matches[1]] ) ) {
         $this->data[$matches[1]] = array();
       }
@@ -113,15 +143,15 @@ class CodeDir {
       }
 
       // Ignore ignored files
+      $cont = false;
       foreach ($this->ignore as $ignore) {
-        $cont = false;
         if ( preg_match( "/{$ignore}/", $path ) ) {
           $cont = true;
           break;
         }
-        if ( $cont ) {
-          continue;
-        }
+      }
+      if ( $cont ) {
+        continue;
       } // - ignore
       // Recursive search for files
       if ( is_dir( $dir .'/'.$path ) ) {
