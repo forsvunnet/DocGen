@@ -132,14 +132,17 @@ class CodeDir {
         $ext = pathinfo( $dir .'/'.$path, PATHINFO_EXTENSION );
         if ( in_array( $ext, $this->ext ) ) {
           // Process the file
-          $this->process_file( $dir .'/'. $path );
+          $this->process_file( $dir .'/'. $path, $path );
         }
       }
     }
     return $this;
   }
 
-  public function process_file( $file ) {
+  public function process_file( $file, $file_name = NULL ) {
+    if ( NULL === $file_name ) {
+      $file_name = $file;
+    }
     $content = file_get_contents( $file );
     $pos = -1;
     do {
@@ -151,7 +154,7 @@ class CodeDir {
           $header = substr( $content, $pos, $end_pos - $pos + 2 );
           // Get the source code
           $def = $this->get_def( $content, $end_pos );
-          $doc = new CodeDoc( $header, $def, $file, $pos );
+          $doc = new CodeDoc( $header, $def, $file_name, $pos );
           if ( $doc->valid ) {
             $id = count( $this->code_docs );
             $this->code_docs[] = $doc;
